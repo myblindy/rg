@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LoycCore" Version="29.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="ScriptingLanguage\Grammar.out.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Grammar.ecs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="ScriptingLanguage\Grammar.ecs">
+      <Generator>LeMP</Generator>
+      <LastGenOutput>Grammar.out.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+</Project>
