@@ -21,6 +21,12 @@ namespace rg.ScriptingLanguage
 {
 	using TT = TokenType;
 	using S = CodeSymbols;
+	using ES = ExtraCodeSymbols;
+
+	static class ExtraCodeSymbols
+	{
+		public static readonly Symbol PrintSymbol = GSymbol.Get("'print");
+	}
 	[GeneratedCode("ECS", null)] public enum TokenType
 	{
 		EOF = 0,
@@ -44,10 +50,13 @@ namespace rg.ScriptingLanguage
 		RParen = TokenKind.RParen,
 		LBrace = TokenKind.LBrace,
 		RBrace = TokenKind.RBrace,
+		LBrack = TokenKind.LBrack,
+		RBrack = TokenKind.RBrack,
 		Comma = TokenKind.Separator,
 		Semicolon = TokenKind.Separator,
-		LBrack,
-		RBrack,
+		Colon = TokenKind.Separator,
+		ForEach = TokenKind.OtherKeyword + 1,
+		Print = TokenKind.OtherKeyword + 2,
 		Unknown
 	}
 
@@ -75,183 +84,253 @@ namespace rg.ScriptingLanguage
 		public override Maybe<Token> NextToken()
 		{
 			int la0, la1;
-			// line 82
+			// line 92
 			_startIndex = InputPosition;
-			// line 83
+			// line 93
 			_value = null;
-			// Line 84: ( (Num | Id | Newline | [\t ] ([\t ])*) | ([<] [=] / [>] [=] / [=] [=] / [!] [=] / [>] / [<] / [=] / [*] / [/] / [+] / [\-] / [(] / [)] / [[] / [\]] / [,] / [;]) )
-			la0 = LA0;
-			switch (la0) {
-			case '.': case '0': case '1': case '2':
-			case '3': case '4': case '5': case '6':
-			case '7': case '8': case '9':
-				{
-					// line 84
-					_type = TT.Num;
-					Num();
-				}
-				break;
-			case '\n': case '\r':
-				{
-					// line 86
-					_type = TT.Newline;
-					Newline();
-				}
-				break;
-			case '\t': case ' ':
-				{
-					// line 87
-					_type = TT.Spaces;
-					Skip();
-					// Line 87: ([\t ])*
-					for (;;) {
-						la0 = LA0;
-						if (la0 == '\t' || la0 == ' ')
+			// Line 94: ( ([f] [o] [r] | [p] [r] [i] [n] [t] | Num | Id | Newline | [\t ] ([\t ])*) | ([<] [=] / [>] [=] / [=] [=] / [!] [=] / [>] / [<] / [=] / [*] / [/] / [+] / [\-] / [(] / [)] / [[] / [\]] / [{] / [}] / [,] / [;] / [:] / [f] [o] [r] / [p] [r] [i] [n] [t]) )
+			do {
+				switch (LA0) {
+				case 'f':
+					{
+						la1 = LA(1);
+						if (la1 == 'o') {
+							// line 94
+							_type = TT.ForEach;
 							Skip();
-						else
-							break;
+							Skip();
+							Match('r'); // line 134
+							_type = TT.ForEach; // line 134
+							_value = S.ForEach;
+						} else
+							goto matchId;
 					}
-				}
-				break;
-			case '<':
-				{
-					la1 = LA(1);
-					if (la1 == '=') {
+					break;
+				case 'p':
+					{
+						la1 = LA(1);
+						if (la1 == 'r') {
+							// line 95
+							_type = TT.Print;
+							Skip();
+							Skip();
+							Match('i');
+							Match('n');
+							Match('t'); // line 134
+							_type = TT.Print; // line 134
+							_value = ES.PrintSymbol;
+						} else
+							goto matchId;
+					}
+					break;
+				case '.': case '0': case '1': case '2':
+				case '3': case '4': case '5': case '6':
+				case '7': case '8': case '9':
+					{
+						// line 96
+						_type = TT.Num;
+						Num();
+					}
+					break;
+				case 'A': case 'B': case 'C': case 'D':
+				case 'E': case 'F': case 'G': case 'H':
+				case 'I': case 'J': case 'K': case 'L':
+				case 'M': case 'N': case 'O': case 'P':
+				case 'Q': case 'R': case 'S': case 'T':
+				case 'U': case 'V': case 'W': case 'X':
+				case 'Y': case 'Z': case '_': case 'a':
+				case 'b': case 'c': case 'd': case 'e':
+				case 'g': case 'h': case 'i': case 'j':
+				case 'k': case 'l': case 'm': case 'n':
+				case 'o': case 'q': case 'r': case 's':
+				case 't': case 'u': case 'v': case 'w':
+				case 'x': case 'y': case 'z':
+					goto matchId;
+				case '\n': case '\r':
+					{
+						// line 98
+						_type = TT.Newline;
+						Newline();
+					}
+					break;
+				case '\t': case ' ':
+					{
+						// line 99
+						_type = TT.Spaces;
 						Skip();
-						Skip(); // line 126
-						_type = TT.LE; // line 126
-						_value = S.LE;
-					} else {
-						Skip(); // line 126
-						_type = TT.LT; // line 126
-						_value = S.LT;
+						// Line 99: ([\t ])*
+						for (;;) {
+							la0 = LA0;
+							if (la0 == '\t' || la0 == ' ')
+								Skip();
+							else
+								break;
+						}
 					}
-				}
-				break;
-			case '>':
-				{
-					la1 = LA(1);
-					if (la1 == '=') {
+					break;
+				case '<':
+					{
+						la1 = LA(1);
+						if (la1 == '=') {
+							Skip();
+							Skip(); // line 134
+							_type = TT.LE; // line 134
+							_value = S.LE;
+						} else {
+							Skip(); // line 134
+							_type = TT.LT; // line 134
+							_value = S.LT;
+						}
+					}
+					break;
+				case '>':
+					{
+						la1 = LA(1);
+						if (la1 == '=') {
+							Skip();
+							Skip(); // line 134
+							_type = TT.GE; // line 134
+							_value = S.GE;
+						} else {
+							Skip(); // line 134
+							_type = TT.GT; // line 134
+							_value = S.GT;
+						}
+					}
+					break;
+				case '=':
+					{
+						la1 = LA(1);
+						if (la1 == '=') {
+							Skip();
+							Skip(); // line 134
+							_type = TT.Eq; // line 134
+							_value = S.Eq;
+						} else {
+							Skip(); // line 134
+							_type = TT.Assign; // line 134
+							_value = S.Assign;
+						}
+					}
+					break;
+				case '!':
+					{
 						Skip();
-						Skip(); // line 126
-						_type = TT.GE; // line 126
-						_value = S.GE;
-					} else {
-						Skip(); // line 126
-						_type = TT.GT; // line 126
-						_value = S.GT;
+						Match('='); // line 134
+						_type = TT.NotEq; // line 134
+						_value = S.NotEq;
+					}
+					break;
+				case '*':
+					{
+						Skip(); // line 134
+						_type = TT.Mul; // line 134
+						_value = S.Mul;
+					}
+					break;
+				case '/':
+					{
+						Skip(); // line 134
+						_type = TT.Div; // line 134
+						_value = S.Div;
+					}
+					break;
+				case '+':
+					{
+						Skip(); // line 134
+						_type = TT.Add; // line 134
+						_value = S.Add;
+					}
+					break;
+				case '-':
+					{
+						Skip(); // line 134
+						_type = TT.Sub; // line 134
+						_value = S.Sub;
+					}
+					break;
+				case '(':
+					{
+						Skip(); // line 134
+						_type = TT.LParen; // line 134
+						_value = null;
+					}
+					break;
+				case ')':
+					{
+						Skip(); // line 134
+						_type = TT.RParen; // line 134
+						_value = null;
+					}
+					break;
+				case '[':
+					{
+						Skip(); // line 134
+						_type = TT.LBrace; // line 134
+						_value = null;
+					}
+					break;
+				case ']':
+					{
+						Skip(); // line 134
+						_type = TT.RBrace; // line 134
+						_value = null;
+					}
+					break;
+				case '{':
+					{
+						Skip(); // line 134
+						_type = TT.LBrack; // line 134
+						_value = null;
+					}
+					break;
+				case '}':
+					{
+						Skip(); // line 134
+						_type = TT.RBrack; // line 134
+						_value = null;
+					}
+					break;
+				case ',':
+					{
+						Skip(); // line 134
+						_type = TT.Comma; // line 134
+						_value = S.Comma;
+					}
+					break;
+				case ';':
+					{
+						Skip(); // line 134
+						_type = TT.Semicolon; // line 134
+						_value = S.Semicolon;
+					}
+					break;
+				case ':':
+					{
+						Skip(); // line 134
+						_type = TT.Colon; // line 134
+						_value = S.Colon;
+					}
+					break;
+				default:
+					{
+						// Line 101: ([^\$])?
+						la0 = LA0;
+						if (la0 != -1)
+							Skip();
+						// line 101
+						return NoValue.Value;
 					}
 				}
 				break;
-			case '=':
+			matchId:
 				{
-					la1 = LA(1);
-					if (la1 == '=') {
-						Skip();
-						Skip(); // line 126
-						_type = TT.Eq; // line 126
-						_value = S.Eq;
-					} else {
-						Skip(); // line 126
-						_type = TT.Assign; // line 126
-						_value = S.Assign;
-					}
-				}
-				break;
-			case '!':
-				{
-					Skip();
-					Match('='); // line 126
-					_type = TT.NotEq; // line 126
-					_value = S.NotEq;
-				}
-				break;
-			case '*':
-				{
-					Skip(); // line 126
-					_type = TT.Mul; // line 126
-					_value = S.Mul;
-				}
-				break;
-			case '/':
-				{
-					Skip(); // line 126
-					_type = TT.Div; // line 126
-					_value = S.Div;
-				}
-				break;
-			case '+':
-				{
-					Skip(); // line 126
-					_type = TT.Add; // line 126
-					_value = S.Add;
-				}
-				break;
-			case '-':
-				{
-					Skip(); // line 126
-					_type = TT.Sub; // line 126
-					_value = S.Sub;
-				}
-				break;
-			case '(':
-				{
-					Skip(); // line 126
-					_type = TT.LParen; // line 126
-					_value = null;
-				}
-				break;
-			case ')':
-				{
-					Skip(); // line 126
-					_type = TT.RParen; // line 126
-					_value = null;
-				}
-				break;
-			case '[':
-				{
-					Skip(); // line 126
-					_type = TT.LBrace; // line 126
-					_value = null;
-				}
-				break;
-			case ']':
-				{
-					Skip(); // line 126
-					_type = TT.RBrace; // line 126
-					_value = null;
-				}
-				break;
-			case ',':
-				{
-					Skip(); // line 126
-					_type = TT.Comma; // line 126
-					_value = S.Comma;
-				}
-				break;
-			case ';':
-				{
-					Skip(); // line 126
-					_type = TT.Semicolon; // line 126
-					_value = S.Semicolon;
-				}
-				break;
-			default:
-				if (la0 >= 'A' && la0 <= 'Z' || la0 == '_' || la0 >= 'a' && la0 <= 'z') {
-					// line 85
+					// line 97
 					_type = TT.Id;
 					Id();
-				} else {
-					// Line 89: ([^\$])?
-					la0 = LA0;
-					if (la0 != -1)
-						Skip();
-					// line 89
-					return NoValue.Value;
 				}
-				break;
-			}
-			// line 91
+			} while (false);
+			// line 103
 			return new Token((int) _type, _startIndex, InputPosition - _startIndex, NodeStyle.Default, _value);
 		}
 		static readonly HashSet<int> Id_set0 = NewSetOfRanges('0', '9', 'A', 'Z', '_', '_', 'a', 'z');
@@ -260,7 +339,7 @@ namespace rg.ScriptingLanguage
 		{
 			int la0;
 			Skip();
-			// Line 99: ([0-9A-Z_a-z])*
+			// Line 111: ([0-9A-Z_a-z])*
 			for (;;) {
 				la0 = LA0;
 				if (Id_set0.Contains(la0))
@@ -268,24 +347,24 @@ namespace rg.ScriptingLanguage
 				else
 					break;
 			}
-			// line 100
+			// line 112
 			_value = (Symbol) (CharSource.Slice(_startIndex, InputPosition - _startIndex).ToString());
 		}
 
 		private void Num()
 		{
 			int la0, la1;
-			// line 104
+			// line 116
 			bool dot = false;
-			// Line 105: ([.])?
+			// Line 117: ([.])?
 			la0 = LA0;
 			if (la0 == '.') {
 				Skip();
-				// line 105
+				// line 117
 				dot = true;
 			}
 			MatchRange('0', '9');
-			// Line 106: ([0-9])*
+			// Line 118: ([0-9])*
 			for (;;) {
 				la0 = LA0;
 				if (la0 >= '0' && la0 <= '9')
@@ -293,7 +372,7 @@ namespace rg.ScriptingLanguage
 				else
 					break;
 			}
-			// Line 107: (&!{dot} [.] [0-9] ([0-9])*)?
+			// Line 119: (&!{dot} [.] [0-9] ([0-9])*)?
 			la0 = LA0;
 			if (la0 == '.') {
 				if (!dot) {
@@ -301,7 +380,7 @@ namespace rg.ScriptingLanguage
 					if (la1 >= '0' && la1 <= '9') {
 						Skip();
 						Skip();
-						// Line 107: ([0-9])*
+						// Line 119: ([0-9])*
 						for (;;) {
 							la0 = LA0;
 							if (la0 >= '0' && la0 <= '9')
@@ -312,13 +391,9 @@ namespace rg.ScriptingLanguage
 					}
 				}
 			}
-			// line 108
+			// line 120
 			_value = double.Parse(CharSource.Slice(_startIndex, InputPosition - _startIndex).ToString());
 		}
-		
-		//private token List() @[
-		//	'[' Id() (',' Id())* ']'
-		//];
 	}
 
 	[GeneratedCode("ECS", null)] 
@@ -354,17 +429,77 @@ namespace rg.ScriptingLanguage
 		public LNode Start()
 		{
 			LNode result = default(LNode);
-			result = Expr();
+			List<LNode> stmts = new List<LNode>();
+			// Line 181: (Statement)*
+			for (;;) {
+				switch ((TokenType) LA0) {
+				case TT.ForEach: case TT.Id: case TT.LBrace: case TT.LParen:
+				case TT.Num: case TT.Print: case TT.Sub:
+					stmts.Add(Statement());
+					break;
+				default:
+					goto stop;
+				}
+			}
+		stop:;
 			Match((int) EOF);
+			// line 181
+			result = F.Braces(stmts);
+			return result;
+		}
+
+		private LNode Statement()
+		{
+			TokenType la0;
+			LNode got_Expr = default(LNode);
+			LNode result = default(LNode);
+			List<LNode> stmts = new List<LNode>();
+			// Line 185: ( TT.ForEach TT.LParen TT.Id TT.Colon Expr TT.RParen TT.LBrack (Statement)* TT.RBrack | TT.Print TT.LParen Expr TT.RParen TT.Semicolon | Expr TT.Semicolon )
+			la0 = (TokenType) LA0;
+			if (la0 == TT.ForEach) {
+				Skip();
+				Match((int) TT.LParen);
+				var t = Match((int) TT.Id);
+				Match((int) TT.Colon);
+				got_Expr = Expr();
+				Match((int) TT.RParen);
+				Match((int) TT.LBrack);
+				// Line 185: (Statement)*
+				for (;;) {
+					switch ((TokenType) LA0) {
+					case TT.ForEach: case TT.Id: case TT.LBrace: case TT.LParen:
+					case TT.Num: case TT.Print: case TT.Sub:
+						stmts.Add(Statement());
+						break;
+					default:
+						goto stop;
+					}
+				}
+			stop:;
+				Match((int) TT.RBrack);
+				// line 186
+				result = F.Call(S.ForEach, F.Id(t), got_Expr, F.Braces(stmts));
+			} else if (la0 == TT.Print) {
+				Skip();
+				Match((int) TT.LParen);
+				got_Expr = Expr();
+				Match((int) TT.RParen);
+				Match((int) TT.Semicolon);
+				// line 188
+				result = F.Call(ES.PrintSymbol, got_Expr);
+			} else {
+				result = Expr();
+				Match((int) TT.Semicolon);
+			}
 			return result;
 		}
 
 		// Handle multiple precedence levels with one rule, as explained in Part 5 article
-		public LNode Expr(int prec = 0)
+		private LNode Expr(int prec = 0)
 		{
 			LNode result = default(LNode);
 			result = PrefixExpr();
-			// Line 179: greedy( &{prec <= 10} TT.LBrace Expr TT.RBrace | &{prec <= 20} TT.Assign Expr | &{prec < 30} (TT.Eq|TT.GE|TT.GT|TT.LE|TT.LT|TT.NotEq) Expr | &{prec < 40} (TT.Add|TT.Sub) Expr | &{prec < 50} (TT.Div|TT.Mul) Expr )*
+			// Line 198: greedy( &{prec <= 10} TT.LBrace Expr TT.RBrace | &{prec <= 20} TT.Assign Expr | &{prec < 30} (TT.Eq|TT.GE|TT.GT|TT.LE|TT.LT|TT.NotEq) Expr | &{prec < 40} (TT.Add|TT.Sub) Expr | &{prec < 50} (TT.Div|TT.Mul) Expr )*
 			for (;;) {
 				switch ((TokenType) LA0) {
 				case TT.LBrace:
@@ -373,7 +508,7 @@ namespace rg.ScriptingLanguage
 							Skip();
 							var index = Expr();
 							Match((int) TT.RBrace);
-							// line 181
+							// line 200
 							result = F.Call(S.IndexBracks, F.AltList(result, index));
 						} else
 							goto stop;
@@ -384,7 +519,7 @@ namespace rg.ScriptingLanguage
 						if (prec <= 20) {
 							var op = MatchAny();
 							var r = Expr(20);
-							// line 184
+							// line 203
 							result = BinOp((Symbol) op.Value, result, r);
 						} else
 							goto stop;
@@ -396,7 +531,7 @@ namespace rg.ScriptingLanguage
 						if (prec < 30) {
 							var op = MatchAny();
 							var r = Expr(30);
-							// line 187
+							// line 206
 							result = BinOp((Symbol) op.Value, result, r);
 						} else
 							goto stop;
@@ -407,7 +542,7 @@ namespace rg.ScriptingLanguage
 						if (prec < 40) {
 							var op = MatchAny();
 							var r = Expr(40);
-							// line 190
+							// line 209
 							result = BinOp((Symbol) op.Value, result, r);
 						} else
 							goto stop;
@@ -418,7 +553,7 @@ namespace rg.ScriptingLanguage
 						if (prec < 50) {
 							var op = MatchAny();
 							var r = Expr(50);
-							// line 193
+							// line 212
 							result = BinOp((Symbol) op.Value, result, r);
 						} else
 							goto stop;
@@ -436,16 +571,16 @@ namespace rg.ScriptingLanguage
 		{
 			TokenType la0;
 			LNode got_Term = default(LNode);
-			// Line 198: (TT.Sub Term | Term)
+			// Line 217: (TT.Sub Term | Term)
 			la0 = (TokenType) LA0;
 			if (la0 == TT.Sub) {
 				var minus = MatchAny();
 				got_Term = Term();
-				// line 198
+				// line 217
 				return F.Call(S.Sub, got_Term, minus.StartIndex, got_Term.Range.EndIndex);
 			} else {
 				got_Term = Term();
-				// line 199
+				// line 218
 				return got_Term;
 			}
 		}
@@ -456,16 +591,16 @@ namespace rg.ScriptingLanguage
 			LNode first = default(LNode);
 			List<LNode> rest = new List<LNode>();
 			LNode result = default(LNode);
-			// Line 203: ( TT.Id | TT.Num | TT.LBrace TT.RBrace | TT.LBrace Expr (TT.Comma Expr)* TT.RBrace | TT.LParen Expr TT.RParen )
+			// Line 222: ( TT.Id | TT.Num | TT.LBrace TT.RBrace | TT.LBrace Expr (TT.Comma Expr)* TT.RBrace | TT.LParen Expr TT.RParen )
 			do {
 				la0 = (TokenType) LA0;
 				if (la0 == TT.Id) {
 					var t = MatchAny();
-					// line 203
+					// line 222
 					result = F.Id(t);
 				} else if (la0 == TT.Num) {
 					var t = MatchAny();
-					// line 204
+					// line 223
 					result = F.Literal(t);
 				} else if (la0 == TT.LBrace) {
 					switch ((TokenType) LA(1)) {
@@ -473,7 +608,7 @@ namespace rg.ScriptingLanguage
 						{
 							Skip();
 							Skip();
-							// line 205
+							// line 224
 							result = F.AltList();
 						}
 						break;
@@ -482,7 +617,7 @@ namespace rg.ScriptingLanguage
 						{
 							Skip();
 							first = Expr();
-							// Line 206: (TT.Comma Expr)*
+							// Line 225: (TT.Comma Expr)*
 							for (;;) {
 								la0 = (TokenType) LA0;
 								if (la0 == TT.Comma) {
@@ -492,7 +627,7 @@ namespace rg.ScriptingLanguage
 									break;
 							}
 							Match((int) TT.RBrace);
-							// line 206
+							// line 225
 							result = F.AltList(rest?.Prepend(first) ?? Enumerable.Repeat(first, 1));
 						}
 						break;
@@ -503,14 +638,14 @@ namespace rg.ScriptingLanguage
 					Skip();
 					result = Expr();
 					Match((int) TT.RParen);
-					// line 207
+					// line 226
 					result = F.InParens(result);
 				} else
 					goto error;
 				break;
 			error:
 				{
-					// line 208
+					// line 227
 					result = F.Missing;
 					Error(0, "Expected identifer, number, or (parens)");
 				}

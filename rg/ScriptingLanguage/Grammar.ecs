@@ -15,6 +15,12 @@ namespace rg.ScriptingLanguage
 {
 	using TT = TokenType;  
 	using S = CodeSymbols;
+	using ES = ExtraCodeSymbols;
+
+	static class ExtraCodeSymbols
+	{
+		public static readonly Symbol PrintSymbol = GSymbol.Get("'print");
+	}
 
 	// longer operators first
 	replace (PUNCTUATION_TOKEN_LIST => (
@@ -33,8 +39,14 @@ namespace rg.ScriptingLanguage
 		(")",  RParen,    null,		    TokenKind.RParen),
 		("[",  LBrace,    null,		    TokenKind.LBrace),
 		("]",  RBrace,    null,		    TokenKind.RBrace),
+		("{",  LBrack,    null,		    TokenKind.LBrack),
+		("}",  RBrack,    null,		    TokenKind.RBrack),
 		(",",  Comma,     S.Comma,		TokenKind.Separator),
 		(";",  Semicolon, S.Semicolon,  TokenKind.Separator),
+		(":",  Colon,	  S.Colon,		TokenKind.Separator),
+
+		("for",		ForEach, S.ForEach,			TokenKind.OtherKeyword + 1),
+		("print",	Print,	 ES.PrintSymbol,	TokenKind.OtherKeyword + 2),
 		));
 
 	[GeneratedCode("ECS", null)]
@@ -49,8 +61,6 @@ namespace rg.ScriptingLanguage
 		{
 			TOKEN_NAME = TOKEN_KIND;
 		},
-		LBrack,
-		RBrack,
 		Unknown
 	}
 
@@ -81,7 +91,9 @@ namespace rg.ScriptingLanguage
 		{
 			_startIndex = InputPosition;
 			_value = null;
-			@[ {_type = TT.Num;}       Num
+			@[ {_type = TT.ForEach;}   ForEach
+			 | {_type = TT.Print;}	   Print
+			 | {_type = TT.Num;}       Num
 			 | {_type = TT.Id;}        Id
 			 | {_type = TT.Newline; }  Newline
 			 | {_type = TT.Spaces;  }  (' '|'\t')+
@@ -107,10 +119,6 @@ namespace rg.ScriptingLanguage
 			(&!{dot} '.' '0'..'9'+)?
 			{_value = double.Parse(CharSource.Slice(_startIndex, InputPosition - _startIndex).ToString());}
 		];
-
-		//private token List() @[
-		//	'[' Id() (',' Id())* ']'
-		//];
 
 		// Use 'unroll' to generate a rule for each operator token. Note: LLLPG 
 		// and 'unroll' are unaware of each other, so we cannot use 'unroll' 
@@ -169,10 +177,21 @@ namespace rg.ScriptingLanguage
 			alias(TEXT = TT.TOKEN_NAME);
 		}
 
-		public rule LNode Start() @[ result:Expr EOF ];
+		public rule LNode Start() @[ 
+			stmts+:Statement* EOF {$result = F.Braces(stmts);}
+		];
+
+		private rule LNode Statement() @[
+			( TT.ForEach "(" t:=TT.Id ":" Expr ")" "{" stmts+:Statement* "}" 
+				{$result = F.Call(S.ForEach, F.Id(t), $Expr, F.Braces(stmts));}
+			| TT.Print "(" Expr ")" ";" 
+				{$result = F.Call(ES.PrintSymbol, $Expr);}
+			| result:Expr ";"
+			)
+		];
 
 		// Handle multiple precedence levels with one rule, as explained in Part 5 article
-		public rule LNode Expr(int prec = 0) @[
+		private rule LNode Expr(int prec = 0) @[
 			result:PrefixExpr
 			greedy // to suppress ambiguity warning
 			(   // Remember to add [Local] when your predicate uses a local variable
@@ -203,9 +222,9 @@ namespace rg.ScriptingLanguage
 			( t:=TT.Id              {$result = F.Id(t);}
 			| t:=TT.Num             {$result = F.Literal(t);}
 			| "[" "]"				{$result = F.AltList();}
-			| "[" first:Expr() ("," rest+:Expr())* "]" {$result = F.AltList($rest?.Prepend($first) ?? Enumerable.Repeat($first, 1));}
-			| "(" result:Expr() ")" {$result = F.InParens($result);}
-			| error             {$result = F.Missing; Error(0, "Expected identifer, number, or (parens)");}
+			| "[" first:Expr ("," rest+:Expr)* "]" {$result = F.AltList($rest?.Prepend($first) ?? Enumerable.Repeat($first, 1));}
+			| "(" result:Expr ")"   {$result = F.InParens($result);}
+			| error                 {$result = F.Missing; Error(0, "Expected identifer, number, or (parens)");}
 			)
 		];
 	}

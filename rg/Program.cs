@@ -4,6 +4,7 @@ using rg.ScriptingLanguage;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using Loyc.Collections;
 
 namespace rg
 {
@@ -19,13 +20,38 @@ namespace rg
 
         static void Main()
         {
-            Dictionary<string, object> vars = new();
+            VariableStack vars = new();
             object visit(LNode node)
             {
+                if (node.Name == CodeSymbols.Braces)
+                {
+                    object ret = default;
+                    node.Args.ForEach(n => ret = visit(n));
+                    return ret;
+                }
                 if (node.IsLiteral) return (double)node.Value;
                 if (node.IsId) return vars[node.Name.Name];
                 if (node.IsCall)
-                    if (node.Calls(CodeSymbols.Assign, 2))
+                    if (node.Calls(ExtraCodeSymbols.PrintSymbol))
+                    {
+                        node.Args.ForEach(w => writeln(visit(w)));
+
+                        // TODO void
+                        return null;
+                    }
+                    else if (node.Calls(CodeSymbols.ForEach, 3))
+                    {
+                        using (vars.AddNewFrame(temp: true))
+                            foreach (var element in (List<object>)visit(node.Args[1]))
+                            {
+                                vars[node.Args[0].Name.Name] = element;
+                                visit(node.Args[2]);
+                            }
+
+                        // TODO void
+                        return null;
+                    }
+                    else if (node.Calls(CodeSymbols.Assign, 2))
                         if (node.Args[0].Name == CodeSymbols.IndexBracks)
                             return ((List<object>)visit(node.Args[0].Args[0].Args[0]))[(int)(double)visit(node.Args[0].Args[0].Args[1])] = visit(node.Args[1]);
                         else
@@ -54,31 +80,35 @@ namespace rg
                     }
                     Console.Write("]");
                 }
+                else if (obj is null)
+                    Console.Write("<NULL>");
                 else
                     throw new NotImplementedException();
             }
             void writeln(object obj) { write(obj); Console.WriteLine(); }
 
-            writeln(visit(MyParser.New("x=[10]").Start()));
-            writeln(visit(MyParser.New("z=[3]").Start()));
-            writeln(visit(MyParser.New("x=[10, 30]").Start()));
-            writeln(visit(MyParser.New("x").Start()));
-            writeln(visit(MyParser.New("y=[x, 510, 520, 530]").Start()));
-            writeln(visit(MyParser.New("x[0]").Start()));
-            writeln(visit(MyParser.New("x[1]").Start()));
-            writeln(visit(MyParser.New("y[0]").Start()));
-            writeln(visit(MyParser.New("y[1]").Start()));
-            writeln(visit(MyParser.New("y[2]").Start()));
-            writeln(visit(MyParser.New("y[0][0]").Start()));
-            writeln(visit(MyParser.New("y[0][z[2*0.5-1]-2]").Start()));
-            writeln(visit(MyParser.New("a = (1 + 2 / 4) * 2 + 1").Start()));
-            writeln(visit(MyParser.New("a / 3").Start()));
-            writeln(visit(MyParser.New("a = a - 1").Start()));
-            writeln(visit(MyParser.New("a / 3").Start()));
-            writeln(visit(MyParser.New("y[2] = 999").Start()));
-            writeln(visit(MyParser.New("y[0][1] = 888").Start()));
-            writeln(visit(MyParser.New("y[0][0] = []").Start()));
-            writeln(visit(MyParser.New("y").Start()));
+            writeln(visit(MyParser.New("arf=10;marf=20;arf;").Start()));
+            writeln(visit(MyParser.New("x=[10];").Start()));
+            writeln(visit(MyParser.New("z=[3];").Start()));
+            writeln(visit(MyParser.New("x=[10, 30];").Start()));
+            writeln(visit(MyParser.New("for(e: x) { print(e); v = e; } v;").Start()));
+            writeln(visit(MyParser.New("x;").Start()));
+            writeln(visit(MyParser.New("y=[x, 510, 520, 530];").Start()));
+            writeln(visit(MyParser.New("x[0];").Start()));
+            writeln(visit(MyParser.New("x[1];").Start()));
+            writeln(visit(MyParser.New("y[0];").Start()));
+            writeln(visit(MyParser.New("y[1];").Start()));
+            writeln(visit(MyParser.New("y[2];").Start()));
+            writeln(visit(MyParser.New("y[0][0];").Start()));
+            writeln(visit(MyParser.New("y[0][z[2*0.5-1]-2];").Start()));
+            writeln(visit(MyParser.New("a = (1 + 2 / 4) * 2 + 1;").Start()));
+            writeln(visit(MyParser.New("a / 3;").Start()));
+            writeln(visit(MyParser.New("a = a - 1;").Start()));
+            writeln(visit(MyParser.New("a / 3;").Start()));
+            writeln(visit(MyParser.New("y[2] = 999;").Start()));
+            writeln(visit(MyParser.New("y[0][1] = 888;").Start()));
+            writeln(visit(MyParser.New("y[0][0] = [];").Start()));
+            writeln(visit(MyParser.New("y;").Start()));
         }
     }
 }
