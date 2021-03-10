@@ -31,7 +31,11 @@ namespace rg.ScriptingLanguage
 		("-",  Sub,       S.Sub,	    TokenKind.Operator + 10),
 		("(",  LParen,    null,		    TokenKind.LParen),
 		(")",  RParen,    null,		    TokenKind.RParen),
-		(";",  Semicolon, S.Semicolon,  TokenKind.Separator)));
+		("[",  LBrace,    null,		    TokenKind.LBrace),
+		("]",  RBrace,    null,		    TokenKind.RBrace),
+		(",",  Comma,     S.Comma,		TokenKind.Separator),
+		(";",  Semicolon, S.Semicolon,  TokenKind.Separator),
+		));
 
 	[GeneratedCode("ECS", null)]
 	public enum TokenType
@@ -45,6 +49,8 @@ namespace rg.ScriptingLanguage
 		{
 			TOKEN_NAME = TOKEN_KIND;
 		},
+		LBrack,
+		RBrack,
 		Unknown
 	}
 
@@ -101,6 +107,10 @@ namespace rg.ScriptingLanguage
 			(&!{dot} '.' '0'..'9'+)?
 			{_value = double.Parse(CharSource.Slice(_startIndex, InputPosition - _startIndex).ToString());}
 		];
+
+		//private token List() @[
+		//	'[' Id() (',' Id())* ']'
+		//];
 
 		// Use 'unroll' to generate a rule for each operator token. Note: LLLPG 
 		// and 'unroll' are unaware of each other, so we cannot use 'unroll' 
@@ -167,7 +177,10 @@ namespace rg.ScriptingLanguage
 			greedy // to suppress ambiguity warning
 			(   // Remember to add [Local] when your predicate uses a local variable
 				&{[Local] prec <= 10}
-				op:="=" r:=Expr(10)
+				"[" index:=Expr() "]"
+				{ $result = F.Call(S.IndexBracks, F.AltList($result, $index)); }
+			|   &{[Local] prec <= 20}
+				op:="=" r:=Expr(20)
 				{ $result = BinOp((Symbol)op.Value, $result, r); }
 			|   &{[Local] prec < 30}
 				op:=(">"|"<"|">="|"<="|"=="|"!=") r:=Expr(30)
@@ -187,14 +200,10 @@ namespace rg.ScriptingLanguage
 			];
 
 		private rule LNode Term() @[
-			// Supports "mathy" expressions like 3(x-1)(x+1)
-			result:Atom
-			[ rest:=Atom {$result = BinOp(S.Mul, $result, rest);} ]*
-		];
-
-		private rule LNode Atom() @[
 			( t:=TT.Id              {$result = F.Id(t);}
 			| t:=TT.Num             {$result = F.Literal(t);}
+			| "[" "]"				{$result = F.AltList();}
+			| "[" first:Expr() ("," rest+:Expr())* "]" {$result = F.AltList($rest?.Prepend($first) ?? Enumerable.Repeat($first, 1));}
 			| "(" result:Expr() ")" {$result = F.InParens($result);}
 			| error             {$result = F.Missing; Error(0, "Expected identifer, number, or (parens)");}
 			)
